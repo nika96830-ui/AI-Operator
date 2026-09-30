@@ -13,11 +13,13 @@ export default async function handler(req, res) {
   }
 
   const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
+  const locale = ['az', 'ru', 'en'].includes(req.body?.locale) ? req.body.locale : 'az';
+  const language = locale === 'az' ? 'Azerbaijani' : locale === 'ru' ? 'Russian' : 'English';
   if (!prompt) return json(res, 400, { error: 'A non-empty prompt is required.' });
   if (prompt.length > 4000) return json(res, 413, { error: 'Prompt is too long. Limit it to 4000 characters.' });
 
   const instruction = `You are the planning engine for AI Operator, a read-first operations console. Analyze the user's task and return ONLY valid JSON with this exact shape: {"summary":"string","steps":[{"title":"string","detail":"string"}]}.
-Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable integrations; do not claim that you searched, changed, deployed, or verified anything; describe intended checks in future or planning language. User task: ${prompt}`;
+Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable integrations; do not claim that you searched, changed, deployed, or verified anything; describe intended checks in future or planning language; write every summary, step title, and detail in ${language}. User task: ${prompt}`;
 
   try {
     const upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`, {

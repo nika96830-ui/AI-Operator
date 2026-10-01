@@ -25,10 +25,22 @@ export default async function handler(req, res) {
 Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable integrations; do not claim that you searched, changed, deployed, or verified anything; describe intended checks in future or planning language; write every summary, step title, and detail in ${language}. User task: ${prompt}`;
 
   try {
+    let availableModels = [];
+    const modelDirectory = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+    if (modelDirectory.ok) {
+      const directoryPayload = await modelDirectory.json();
+      availableModels = (directoryPayload.models || [])
+        .filter(item => (item.supportedGenerationMethods || []).includes('generateContent'))
+        .map(item => String(item.name || '').replace(/^models\//, ''))
+        .filter(Boolean);
+    }
+    const preferredAvailable = availableModels.filter(candidate => FALLBACK_MODELS.includes(candidate));
+    const discoveredFlash = availableModels.filter(candidate => /flash/i.test(candidate));
+    const modelsToTry = [...new Set([...preferredAvailable, ...discoveredFlash, ...FALLBACK_MODELS])];
     let upstream;
     let payload;
-    let model = FALLBACK_MODELS[0];
-    for (const candidate of FALLBACK_MODELS) {
+    let model = modelsToTry[0];
+    for (const candidate of modelsToTry) {
       model = candidate;
       upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
@@ -42,7 +54,7 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
       if (upstream.ok || upstream.status !== 404) break;
     }
     if (!upstream.ok) {
-      const reason = upstream.status === 401 || upstream.status === 403 ? 'Gemini rejected GEMINI_API_KEY. Verify the server-side key is active and has Generative Language API access.' : upstream.status === 404 ? 'No configured Gemini model is available for this API key.' : 'Gemini request failed. Check the server-side key and model configuration.';
+      const reason = upstream.status === 401 || upstream.status === 403 ? 'Gemini rejected GEMINI_API_KEY. Verify the server-side key is active and has Generative Language API access.' : upstream.status === 404 ? 'No Gemini model supporting generateContent is available for this API key. Check the key project and Generative Language API access.' : 'Gemini request failed. Check the server-side key and model configuration.';
       console.error('Gemini API error', upstream.status, payload?.error?.message || 'unknown');
       return json(res, upstream.status === 401 || upstream.status === 403 ? 502 : 502, { error: reason });
     }

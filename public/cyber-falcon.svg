@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Skygard AI Cyber Falcon</title>
+  <desc id="desc">A cybernetic falcon emblem with luminous cyan and lime details</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#183750"/><stop offset="1" stop-color="#08111d"/></linearGradient><linearGradient id="wing" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#76d9e3"/><stop offset="1" stop-color="#8aa8bc"/></linearGradient></defs>
+  <circle cx="64" cy="64" r="59" fill="url(#bg)" stroke="#c8f56a" stroke-width="2"/>
+  <path d="M18 52 46 28l17 14 15-22 6 25 25 10-22 8 14 23-30-12-18 23-4-28-25 8 14-18z" fill="#0b1b2a" stroke="url(#wing)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="m62 42 18-13-5 20 20 8-21 7 5 22-17-15-17 12 7-21-17-9 20-5z" fill="#16374c" stroke="#76d9e3" stroke-width="2" stroke-linejoin="round"/>
+  <path d="m77 50 13 6-14 4" fill="none" stroke="#c8f56a" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="77" cy="48" r="3.5" fill="#c8f56a"/><path d="M49 91h31M43 99h41" stroke="#76d9e3" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+</svg>

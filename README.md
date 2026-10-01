@@ -1,3 +1,6 @@
+ # Skygard AI
+
+Skygard AI is a local-first, read-first autonomous control plane for turning natural-language requests into verified technical work.
 
 ## Gemini API (server-side)
 
@@ -7,7 +10,7 @@ Configure these Vercel environment variables before selecting **Gemini API** in 
 
 ```text
 GEMINI_API_KEY=your-server-side-key
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 Set `GEMINI_API_KEY` for the Production environment in Vercel Project Settings → Environment Variables, then redeploy. If it is missing, the endpoint returns a clear `503` response and the UI records a failed task instead of falling back silently.

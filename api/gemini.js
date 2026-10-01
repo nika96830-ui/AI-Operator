@@ -1,5 +1,7 @@
-const CONFIGURED_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash';
-const FALLBACK_MODELS = [CONFIGURED_MODEL, 'gemini-2.5-flash', 'gemini-2.0-flash'].filter((model, index, list) => list.indexOf(model) === index);
+const isTextModel = model => model && !/(tts|audio|image|embedding|veo)/i.test(model);
+const requestedModel = process.env.GEMINI_MODEL?.trim();
+const CONFIGURED_MODEL = isTextModel(requestedModel) ? requestedModel : 'gemini-2.5-flash';
+const FALLBACK_MODELS = [CONFIGURED_MODEL, 'gemini-2.5-flash', 'gemini-1.5-flash'].filter((model, index, list) => isTextModel(model) && list.indexOf(model) === index);
 
 function json(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -32,10 +34,10 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
       availableModels = (directoryPayload.models || [])
         .filter(item => (item.supportedGenerationMethods || []).includes('generateContent'))
         .map(item => String(item.name || '').replace(/^models\//, ''))
-        .filter(Boolean);
+        .filter(isTextModel);
     }
     const preferredAvailable = availableModels.filter(candidate => FALLBACK_MODELS.includes(candidate));
-    const discoveredFlash = availableModels.filter(candidate => /flash/i.test(candidate));
+    const discoveredFlash = availableModels.filter(candidate => /flash/i.test(candidate) && isTextModel(candidate));
     const modelsToTry = [...new Set([...preferredAvailable, ...discoveredFlash, ...FALLBACK_MODELS])];
     let upstream;
     let payload;

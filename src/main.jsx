@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './styles.css';
 import { languages, localizedPlan, tr } from './i18n';
 
@@ -70,6 +71,7 @@ function App() {
       <footer><span>{t('footer')}</span><span>{t('shortcut')}</span></footer>
     </main>
     {settingsOpen && <div className="modal-backdrop" onClick={() => setSettingsOpen(false)}><section className="settings-modal" onClick={e => e.stopPropagation()}><div className="settings-head"><div><p className="eyebrow">{t('config')}</p><h2>{t('settings')}</h2></div><button className="close-button" onClick={() => setSettingsOpen(false)}>×</button></div><p className="settings-copy">{t('settingsCopy')}</p><label>{t('provider')}<select value={provider} onChange={e => setProvider(e.target.value)}><option>Demo AI</option><option>Gemini API</option><option>OpenAI-compatible</option><option>Hugging Face</option></select></label><div className="server-key-note"><span className="dot success" /> {t('serverKey')}: <strong>{provider === 'Gemini API' ? t('requiredVercel') : t('notRequired')}</strong></div><div className="settings-actions"><button className="text-button" onClick={() => { setProvider('Demo AI'); localStorage.removeItem('ai-operator-provider'); }}>{t('useDemo')}</button><button className="execute" onClick={saveSettings}>{t('save')}</button></div></section></div>}
+    <SpeedInsights />
   </div>;
 }
 

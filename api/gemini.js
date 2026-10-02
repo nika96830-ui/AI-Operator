@@ -1,7 +1,7 @@
 const isTextModel = model => model && !/(tts|audio|image|embedding|veo)/i.test(model);
 const requestedModel = process.env.GEMINI_MODEL?.trim();
-const CONFIGURED_MODEL = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'].includes(requestedModel) ? requestedModel : 'gemini-flash-latest';
-const FALLBACK_MODELS = [CONFIGURED_MODEL, 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'].filter((model, index, list) => isTextModel(model) && list.indexOf(model) === index);
+const CONFIGURED_MODEL = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'].includes(requestedModel) ? requestedModel : 'gemini-3.8-flash';
+const FALLBACK_MODELS = [CONFIGURED_MODEL, 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'].filter((model, index, list) => isTextModel(model) && list.indexOf(model) === index);
 
 function json(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -64,14 +64,15 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
       }
       if (upstream.ok) break;
       if (upstream.status === 404) continue;
-      if ([429, 500, 502, 503, 504].includes(upstream.status) && candidate !== modelsToTry[modelsToTry.length - 1]) continue;
+      if (upstream.status === 429) break;
+      if ([500, 502, 503, 504].includes(upstream.status) && candidate !== modelsToTry[modelsToTry.length - 1]) continue;
       break;
     }
     if (!upstream.ok) {
       const upstreamMessage = String(payload?.error?.message || '').replace(/key=[^&\s]+/gi, 'key=[redacted]').slice(0, 240);
       const reason = upstream.status === 401 || upstream.status === 403 ? 'Gemini rejected the server-side API key. Verify that the key is active and has Generative Language API access.' : upstream.status === 404 ? 'No Gemini model supporting generateContent is available for this API key. Check the key project and model access.' : `Gemini API ${upstream.status}: ${upstreamMessage || 'request failed; check the server-side key and model configuration.'}`;
       console.error('Gemini API error', upstream.status, upstreamMessage || 'unknown');
-      return json(res, 502, { error: reason, upstreamStatus: upstream.status, model });
+      return json(res, upstream.status === 429 ? 429 : 502, { error: reason, upstreamStatus: upstream.status, model });
     }
 
     const text = payload?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();

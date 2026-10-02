@@ -11,7 +11,8 @@ function json(res, status, body) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  // Keep compatibility with the existing Vercel secret while using the canonical name going forward.
+  const apiKey = (process.env.GEMINI_API_KEY || process.env.Gemini_api_key)?.trim();
   if (!apiKey) {
     return json(res, 503, { error: 'Gemini is not configured. Add GEMINI_API_KEY to the Vercel project environment variables.' });
   }

@@ -57,9 +57,10 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
       if (upstream.ok || upstream.status !== 404) break;
     }
     if (!upstream.ok) {
-      const reason = upstream.status === 401 || upstream.status === 403 ? 'Gemini rejected GEMINI_API_KEY. Verify the server-side key is active and has Generative Language API access.' : upstream.status === 404 ? 'No Gemini model supporting generateContent is available for this API key. Check the key project and Generative Language API access.' : 'Gemini request failed. Check the server-side key and model configuration.';
-      console.error('Gemini API error', upstream.status, payload?.error?.message || 'unknown');
-      return json(res, upstream.status === 401 || upstream.status === 403 ? 502 : 502, { error: reason });
+      const upstreamMessage = String(payload?.error?.message || '').replace(/key=[^&\s]+/gi, 'key=[redacted]').slice(0, 240);
+      const reason = upstream.status === 401 || upstream.status === 403 ? 'Gemini rejected the server-side API key. Verify that the key is active and has Generative Language API access.' : upstream.status === 404 ? 'No Gemini model supporting generateContent is available for this API key. Check the key project and model access.' : `Gemini API ${upstream.status}: ${upstreamMessage || 'request failed; check the server-side key and model configuration.'}`;
+      console.error('Gemini API error', upstream.status, upstreamMessage || 'unknown');
+      return json(res, 502, { error: reason, upstreamStatus: upstream.status, model });
     }
 
     const text = payload?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();

@@ -77,9 +77,18 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
     const text = payload?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();
     if (!text) return json(res, 502, { error: 'Gemini returned an empty response.' });
     let result;
-    try { result = JSON.parse(text.replace(/^```json\s*|\s*```$/g, '')); } catch { return json(res, 502, { error: 'Gemini returned an invalid structured plan.' }); }
+    const cleaned = text.replace(/^```(?:json)?\s*|\s*```$/gi, '').trim();
+    try {
+      result = JSON.parse(cleaned);
+    } catch {
+      const start = cleaned.indexOf('{');
+      const end = cleaned.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        try { result = JSON.parse(cleaned.slice(start, end + 1)); } catch { /* use plain text fallback below */ }
+      }
+    }
     if (!result || typeof result.summary !== 'string' || !Array.isArray(result.steps) || result.steps.length < 1) {
-      return json(res, 502, { error: 'Gemini returned an incomplete plan.' });
+      result = { summary: cleaned.slice(0, 1200), steps: [{ title: 'Gemini response', detail: cleaned.slice(0, 2000) }] };
     }
     const steps = result.steps.slice(0, 5).map(step => ({ title: String(step.title || 'Review task'), detail: String(step.detail || 'Prepare a safe read-first check.') }));
     return json(res, 200, { provider: 'Gemini API', model, summary: result.summary, steps });

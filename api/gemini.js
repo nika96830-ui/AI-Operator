@@ -1,6 +1,6 @@
 const isTextModel = model => model && !/(tts|audio|image|embedding|veo)/i.test(model);
 const requestedModel = process.env.GEMINI_MODEL?.trim();
-const CONFIGURED_MODEL = isTextModel(requestedModel) ? requestedModel : 'gemini-2.5-flash';
+const CONFIGURED_MODEL = ['gemini-2.5-flash', 'gemini-1.5-flash'].includes(requestedModel) ? requestedModel : 'gemini-2.5-flash';
 const FALLBACK_MODELS = [CONFIGURED_MODEL, 'gemini-2.5-flash', 'gemini-1.5-flash'].filter((model, index, list) => isTextModel(model) && list.indexOf(model) === index);
 
 function json(res, status, body) {

@@ -41,7 +41,7 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
     }
     const preferredAvailable = availableModels.filter(candidate => FALLBACK_MODELS.includes(candidate));
     const discoveredFlash = availableModels.filter(candidate => /flash/i.test(candidate) && isTextModel(candidate));
-    const modelsToTry = [...new Set([...preferredAvailable, ...discoveredFlash, ...FALLBACK_MODELS])];
+    const modelsToTry = [...new Set([...preferredAvailable, ...FALLBACK_MODELS, ...discoveredFlash])];
     let upstream;
     let payload;
     let model = modelsToTry[0];

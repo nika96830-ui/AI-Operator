@@ -31,7 +31,7 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
 
   try {
     let availableModels = [];
-    const modelDirectory = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+    const modelDirectory = await fetch('https://generativelanguage.googleapis.com/v1beta/models', { headers: { 'x-goog-api-key': apiKey } });
     if (modelDirectory.ok) {
       const directoryPayload = await modelDirectory.json();
       availableModels = (directoryPayload.models || [])
@@ -49,9 +49,9 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
     for (const candidate of modelsToTry) {
       model = candidate;
       for (let attempt = 0; attempt < 3; attempt += 1) {
-        upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
           body: JSON.stringify({
             contents: [{ role: 'user', parts: [{ text: instruction }] }],
             generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },

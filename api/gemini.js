@@ -9,6 +9,8 @@ function json(res, status, body) {
   return res.end(JSON.stringify(body));
 }
 
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
   // Keep compatibility with the existing Vercel secret while using the canonical name going forward.
@@ -45,15 +47,20 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
     let model = modelsToTry[0];
     for (const candidate of modelsToTry) {
       model = candidate;
-      upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: instruction }] }],
-          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
-        }),
-      });
-      payload = await upstream.json();
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: instruction }] }],
+            generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+          }),
+        });
+        payload = await upstream.json();
+        const transient = [429, 500, 502, 503, 504].includes(upstream.status);
+        if (upstream.ok || upstream.status === 404 || !transient || attempt === 2) break;
+        await wait((attempt + 1) * 800);
+      }
       if (upstream.ok || upstream.status !== 404) break;
     }
     if (!upstream.ok) {

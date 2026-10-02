@@ -40,8 +40,9 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
         .filter(isTextModel);
     }
     const preferredAvailable = availableModels.filter(candidate => FALLBACK_MODELS.includes(candidate));
-    const discoveredFlash = availableModels.filter(candidate => /flash/i.test(candidate) && isTextModel(candidate));
-    const modelsToTry = [...new Set([...preferredAvailable, ...FALLBACK_MODELS, ...discoveredFlash])];
+    // Do not silently fall back to aliases such as gemini-flash-latest: they can route
+    // to overloaded or non-equivalent models. Use only the explicit text models above.
+    const modelsToTry = [...new Set([...preferredAvailable, ...FALLBACK_MODELS])];
     let upstream;
     let payload;
     let model = modelsToTry[0];
@@ -61,7 +62,10 @@ Rules: return 3 to 5 concrete, sequential steps; be honest about unavailable int
         if (upstream.ok || upstream.status === 404 || !transient || attempt === 2) break;
         await wait((attempt + 1) * 800);
       }
-      if (upstream.ok || upstream.status !== 404) break;
+      if (upstream.ok) break;
+      if (upstream.status === 404) continue;
+      if ([429, 500, 502, 503, 504].includes(upstream.status) && candidate !== modelsToTry[modelsToTry.length - 1]) continue;
+      break;
     }
     if (!upstream.ok) {
       const upstreamMessage = String(payload?.error?.message || '').replace(/key=[^&\s]+/gi, 'key=[redacted]').slice(0, 240);
